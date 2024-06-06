@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mainpage</title>
+    <link rel="stylesheet" href="mainpage.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+</head>
+<body>
+    <header>
+        <h2 class="logo">Haltestellenkataster</h2>
+        <input id="search" type="text" list="places" placeholder="Suche...">
+        <button class="btnLogout">Logout</button>
+    </header>
+
+    <div id="map"></div>
+
+    <!-- The Modal -->
+    <div id="addStopModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close">&times;</span>
+                <h2>Haltestelle hinzufügen</h2>
+            </div>
+            <div class="modal-body">
+                <label for="stopName">Name der Haltestelle:</label>
+                <input type="text" id="stopName" name="stopName">
+
+                <label for="zone">In welcher Wabe befindet sich die Haltestelle?</label>
+                <input type="text" id="zone" name="zone">
+
+                <label for="epon">Wie lautet die EPON-Nr der Haltestelle?</label>
+                <input type="text" id="epon" name="epon">
+
+                <label for="streetviewLink">Googlestreetview link hinzufügen:</label>
+                <input type="text" id="streetviewLink" name="streetviewLink">
+
+                <div id="linesContainer">
+                    <!-- Line groups will be dynamically added here -->
+                </div>
+                <button type="button" id="addLineBtn" onclick="addLineGroup()">Weitere Linie hinzufügen</button>
+
+                <div id="questionsContainer">
+                    <!-- Questions will be dynamically added here -->
+                </div>
+                <button type="button" id="addQuestionBtn" onclick="addQuestion()">Weitere Frage hinzufügen</button>
+            </div>
+            <div class="modal-footer">
+                <button id="addStopButton" style="padding: 10px 20px; background-color: #2e6ea0; color: white; border: none; border-radius: 5px;">Hinzufügen</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sidebar" class="sidebar"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="mainpage.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnLogout = document.querySelector('.btnLogout');
+            
+            btnLogout.addEventListener('click', () => {
+                localStorage.removeItem('userRole');
+                window.location.href = 'index.html';
+            });
+
+            // Überprüfen Sie die Rolle des Benutzers und passen Sie die UI entsprechend an
+            const userRole = localStorage.getItem('userRole');
+            if (userRole !== 'editor' && userRole !== 'admin') {
+                document.getElementById('addLineBtn').style.display = 'none';
+                document.getElementById('addQuestionBtn').style.display = 'none';
+                document.getElementById('addStopButton').style.display = 'none';
+                map.off('contextmenu');
+            }
+        });
+    </script>
+</body>
+</html>
