@@ -56,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
             userList.appendChild(row);
         });
 
-        // Fügen Sie Event-Listener für die Lösch-Schaltflächen hinzu
         document.querySelectorAll('.btnDeleteUser').forEach(button => {
             button.addEventListener('click', () => {
                 const index = button.getAttribute('data-index');

@@ -1,4 +1,18 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const defaultAdmin = {
+        email: 'admin@example.com',
+        password: 'admin123',
+        role: 'admin'
+    };
+
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    const adminExists = users.some(user => user.email === defaultAdmin.email && user.role === 'admin');
+
+    if (!adminExists) {
+        users.push(defaultAdmin);
+        localStorage.setItem('users', JSON.stringify(users));
+    }
+
     const wrapper = document.querySelector('.wrapper');
     const btnPopup = document.querySelector('.btnLogin-popup');
     const iconClose = document.querySelector('.icon-close');
@@ -17,11 +31,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
 
-        const users = JSON.parse(localStorage.getItem('users')) || [];
+        users = JSON.parse(localStorage.getItem('users')) || [];
         const user = users.find(u => u.email === email && u.password === password);
 
         if (user) {
-            // Speichern Sie die Rolle des Benutzers in localStorage
             localStorage.setItem('userRole', user.role);
             if (user.role === 'admin') {
                 window.location.href = 'admin.html';
