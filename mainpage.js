@@ -26,8 +26,9 @@ fetch('remscheid.geojson')
         L.geoJSON(dummyGeoJson).addTo(map); // Load dummy data if fetching fails
     });
 
-window.onload = function() {
-    var savedMarkers = JSON.parse(localStorage.getItem('markers'));
+window.onload = async function() {
+    const response = await fetch('http://localhost:3000/api/markers');
+    const savedMarkers = await response.json();
     if (savedMarkers) {
         savedMarkers.forEach(function(savedMarker) {
             if (savedMarker.latlng && savedMarker.name) {
@@ -664,8 +665,8 @@ function updatePlaceList() {
     });
 }
 
-function saveMarkers() {
-    var savedMarkers = markers.map(function(marker) {
+async function saveMarkers() {
+    const markersToSave = markers.map(function(marker) {
         return {
             latlng: marker.getLatLng(),
             name: marker.name,
@@ -676,8 +677,20 @@ function saveMarkers() {
             fragen: marker.fragen // Save the questions as well
         };
     });
-    localStorage.setItem('markers', JSON.stringify(savedMarkers));
-    localStorage.setItem('lineColors', JSON.stringify(lineColors));
+
+    // Löschen Sie alle vorhandenen Marker auf dem Server (optional, je nach Implementierung)
+    // await fetch('http://localhost:3000/api/markers', { method: 'DELETE' });
+
+    // Speichern Sie die Marker auf dem Server
+    for (const marker of markersToSave) {
+        await fetch('http://localhost:3000/api/markers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(marker)
+        });
+    }
 }
 
 function drawLines(filterLine = null, filterDirection = null) {
@@ -732,7 +745,7 @@ function applyQuestions(questions, applyTo) {
 
 function showSidebar(lineName, direction) {
     var sidebar = document.getElementById('sidebar');
-    sidebar.innerHTML = `<h4>Linie ${lineName}</h4>`;
+    sidebar.innerHTML = `<h4>Linie ${lineName} - ${direction === 'outbound' ? 'Hinfahrt' : 'Rückfahrt'}</h4>`;
     
     var stops = [];
     markers.forEach(marker => {
@@ -742,10 +755,8 @@ function showSidebar(lineName, direction) {
         }
     });
 
-    // Sort the stops in the correct order
     var sortedStops = sortStops(lineName, direction, stops);
-    console.log('Sorted Stops:', sortedStops); // Debugging
-    
+
     var ul = document.createElement('ul');
     ul.id = 'stop-list';
     sortedStops.forEach(stop => {
@@ -770,7 +781,6 @@ function showSidebar(lineName, direction) {
         }
     });
 
-    // Schließ-Button erneut hinzufügen
     var closeButton = document.createElement('button');
     closeButton.innerHTML = 'X';
     closeButton.style.position = 'absolute';
@@ -850,7 +860,6 @@ function hideSidebar() {
     drawLines(); // Redraw all lines
 }
 
-// Schließ-Button zur Sidebar hinzufügen
 document.addEventListener('DOMContentLoaded', function() {
     var sidebar = document.getElementById('sidebar');
     var closeButton = document.createElement('button');
@@ -933,69 +942,3 @@ document.getElementById('search').addEventListener('keypress', function(e) {
         }
     }
 });
-
-function showSidebar(lineName) {
-    var sidebar = document.getElementById('sidebar');
-    sidebar.innerHTML = `<h3>Linie ${lineName}</h3>`;
-    
-    var stops = [];
-    markers.forEach(marker => {
-        var hasLine = marker.linien.some(line => line.linie === lineName);
-        if (hasLine) {
-            stops.push(marker.name);
-        }
-    });
-
-    // Sort the stops in the correct order
-    var sortedStops = sortStops(lineName, 'outbound', stops);
-    console.log('Sorted Stops:', sortedStops); // Debugging
-    
-    var ul = document.createElement('ul');
-    ul.id = 'stop-list';
-    sortedStops.forEach(stop => {
-        var li = document.createElement('li');
-        li.textContent = stop;
-        li.onclick = function() {
-            var marker = markers.find(m => m.name === stop);
-            if (marker) {
-                marker.openPopup();
-            }
-        };
-        ul.appendChild(li);
-    });
-    sidebar.appendChild(ul);
-    sidebar.style.display = 'block';
-
-    new Sortable(ul, {
-        animation: 150,
-        onEnd: function(evt) {
-            var newOrder = Array.from(ul.children).map(item => item.textContent);
-            updateLineStops(lineName, newOrder);
-        }
-    });
-
-    // Schließ-Button erneut hinzufügen
-    var closeButton = document.createElement('button');
-    closeButton.innerHTML = 'X';
-    closeButton.style.position = 'absolute';
-    closeButton.style.top = '10px';
-    closeButton.style.right = '10px';
-    closeButton.style.background = 'red';
-    closeButton.style.color = 'white';
-    closeButton.style.border = 'none';
-    closeButton.style.borderRadius = '5px';
-    closeButton.style.cursor = 'pointer';
-    closeButton.onclick = hideSidebar;
-    sidebar.appendChild(closeButton);
-}
-
-function hideSidebar() {
-    var sidebar = document.getElementById('sidebar');
-    sidebar.style.display = 'none';
-    
-    // Show all markers
-    markers.forEach(function(marker) {
-        marker.addTo(map);
-    });
-    drawLines(); // Redraw all lines
-}
